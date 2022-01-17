@@ -16,15 +16,15 @@ class CodeWriter:
 
     def write_line(self, line):
 
-        with open(self.file_name, "a") as f:
-            f.write(line)
+        with open(self.file_path, "a") as f:
+            f.write(line + "\n")
     
     def segment_pointer(self, segment, index):
         if segment == "local":
             return "LCL"
         elif segment == "argument":
             return "ARG"
-        elif segment == "this", "that":
+        elif segment == "this" or segment == "that":
             return segment.upper()
         elif segment == "temp":
             return f"R{5+index}"
