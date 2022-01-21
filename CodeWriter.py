@@ -3,7 +3,7 @@ class CodeWriter:
 
     def __init__(self, file_path):
 
-        self.file_path = f"{file_path}.hack"
+        self.file_path = f"{file_path.replace('.vm', '')}.asm"
         self.module_name = file_path.split("/")[-1].replace(".vm", "")
         self.func_name = ""
         self.label_count = 0
@@ -19,6 +19,7 @@ class CodeWriter:
         with open(self.file_path, "a") as f:
             f.write(line + "\n")
     
+
     def segment_pointer(self, segment, index):
         if segment == "local":
             return "LCL"
@@ -27,13 +28,14 @@ class CodeWriter:
         elif segment == "this" or segment == "that":
             return segment.upper()
         elif segment == "temp":
-            return f"R{5+index}"
+            return f"R{5+int(index)}"
         elif segment == "pointer":
-            return f"R{3+index}"
+            return f"R{3+int(index)}"
         elif segment == "static":
             return f"{self.module_name}.{index}" 
         else:
             return "ERROR"
+
 
     def write_init(self):
         self.write_line("@256")
@@ -41,89 +43,9 @@ class CodeWriter:
         self.write_line("@SP")
         self.write_line("M=D")
         self.write_call("Sys.init", 0)
-        self.write_sub_rotine_return()
         self.write_sub_arithmetic_lt()
         self.write_sub_arithmetic_gt()
         self.write_sub_arithmetic_eq()
-        self.write_sub_frame()
-
-
-    def write_sub_frame(self):
-
-        self.write_line("($FRAME$)")
-        self.write_line("@R15")
-        self.write_line("M=D")
-
-        self.write_frame_push("LCL")
-        self.write_frame_push("ARG")
-        self.write_frame_push("THIS")
-        self.write_frame_push("THAT")
-
-        self.write_line("@R15")
-        self.write_line("A=M")
-        self.write_line("0;JMP")
-
-
-    def write_sub_rotine_return(self):
-
-        self.write_line("($RETURN$)")
-        self.write_line("@R15")
-        self.write_line("M=D")
-
-        self.write_line("@LCL") # FRAME = LCL
-        self.write_line("D=M")
-
-        self.write_line("@R13") # R13 -> FRAME
-        self.write_line("M=D")
-
-        self.write_line("@5") # RET = *(FRAME-5)
-        self.write_line("A=D-A")
-        self.write_line("D=M")
-        self.write_line("@R14") # R14 -> RET
-        self.write_line("M=D")
-
-        self.write_line("@SP") # *ARG = pop()
-        self.write_line("AM=M-1")
-        self.write_line("D=M")
-        self.write_line("@ARG")
-        self.write_line("A=M")
-        self.write_line("M=D")
-
-        self.write_line("D=A") # SP = ARG+1
-        self.write_line("@SP")
-        self.write_line("M=D+1")
-
-        self.write_line("@R13") # THAT = *(FRAME-1)
-        self.write_line("AM=M-1")
-        self.write_line("D=M")
-        self.write_line("@THAT")
-        self.write_line("M=D")
-
-        self.write_line("@R13") # THIS = *(FRAME-2)
-        self.write_line("AM=M-1")
-        self.write_line("D=M")
-        self.write_line("@THIS")
-        self.write_line("M=D")
-
-        self.write_line("@R13") # ARG = *(FRAME-3)
-        self.write_line("AM=M-1")
-        self.write_line("D=M")
-        self.write_line("@ARG")
-        self.write_line("M=D")
-
-        self.write_line("@R13") # LCL = *(FRAME-4)
-        self.write_line("AM=M-1")
-        self.write_line("D=M")
-        self.write_line("@LCL")
-        self.write_line("M=D")
-
-        self.write_line("@R14") # goto RET
-        self.write_line("A=M")
-        self.write_line("0;JMP")
-
-        self.write_line("@R15")
-        self.write_line("A=M")
-        self.write_line("0;JMP")
 
 
     def write_sub_arithmetic_eq(self):
@@ -240,7 +162,7 @@ class CodeWriter:
             self.write_line("@SP")
             self.write_line("M=M+1")
         elif seg == "static" or seg == "temp" or seg == "pointer":
-            self.write_line(f"@{self.segmentPointer(seg, index)} // push {seg} {index}")
+            self.write_line(f"@{self.segment_pointer(seg, index)} // push {seg} {index}")
             self.write_line("D=M")
             self.write_line("@SP")
             self.write_line("A=M")
@@ -248,7 +170,7 @@ class CodeWriter:
             self.write_line("@SP")
             self.write_line("M=M+1")
         elif seg == "local" or seg == "argument" or seg == "this" or seg == "that":
-            self.write_line(f"@{self.segmentPointer(seg, index)} // push {seg} {index}")
+            self.write_line(f"@{self.segment_pointer(seg, index)} // push {seg} {index}")
             self.write_line("D=M")
             self.write_line(f"@{index}")
             self.write_line("A=D+A")
@@ -268,10 +190,10 @@ class CodeWriter:
             self.write_line("M=M-1")
             self.write_line("A=M")
             self.write_line("D=M")
-            self.write_line(f"@{self.segmentPointer(seg, index)}")
+            self.write_line(f"@{self.segment_pointer(seg, index)}")
             self.write_line("M=D")
         elif seg == "local" or seg == "argument" or seg == "this" or seg == "that":
-            self.write_line(f"@{self.segmentPointer(seg, index)} // pop {seg} {index}")
+            self.write_line(f"@{self.segment_pointer(seg, index)} // pop {seg} {index}")
             self.write_line("D=M")
             self.write_line(f"@{index}")
             self.write_line("D=D+A")
@@ -289,23 +211,23 @@ class CodeWriter:
 
 
     def write_arithmetic(self, cmd):
-        if cmd["name"] == "add":
+        if cmd[0] == "add":
             self.write_arithmetic_add()
-        elif cmd["name"] == "sub":
+        elif cmd[0] == "sub":
             self.write_arithmetic_sub()
-        elif cmd["name"] == "neg":
+        elif cmd[0] == "neg":
             self.write_arithmetic_neg()
-        elif cmd["name"] == "eq":
+        elif cmd[0] == "eq":
             self.write_arithmetic_eq()
-        elif cmd["name"] == "gt":
+        elif cmd[0] == "gt":
             self.write_arithmetic_gt()
-        elif cmd["name"] == "lt":
+        elif cmd[0] == "lt":
             self.write_arithmetic_lt()
-        elif cmd["name"] == "and":
+        elif cmd[0] == "and":
             self.write_arithmetic_and()
-        elif cmd["name"] == "or":
+        elif cmd[0] == "or":
             self.write_arithmetic_or()
-        elif cmd["name"] == "not":
+        elif cmd[0] == "not":
             self.write_arithmetic_not()
         else:
             pass
@@ -416,7 +338,7 @@ class CodeWriter:
 
         self.func_name = func_name
 
-        self.write_line("(" + func_name + ")" + "// initializa local variables")
+        self.write_line("(" + func_name + ")" + "// initializate local variables")
         self.write_line(f"@{n_locals}")
         self.write_line("D=A")
         self.write_line("@R13") # temp
@@ -436,16 +358,6 @@ class CodeWriter:
         self.write_line("@" + loop_label)
         self.write_line("0;JMP")
         self.write_line("(" + loop_end_label + ")")
-
-
-    def write_frame_push(self, value):
-        self.write_line("@" + value)
-        self.write_line("D=M")
-        self.write_line("@SP")
-        self.write_line("A=M")
-        self.write_line("M=D")
-        self.write_line("@SP")
-        self.write_line("M=M+1")
 
 
     def write_call(self, func_name, num_args):

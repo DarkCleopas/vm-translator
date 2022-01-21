@@ -16,3 +16,6 @@ push constant 10
 pop local 0
 push constant 0
 return
+// push local 1
+// push constant 3
+// add
