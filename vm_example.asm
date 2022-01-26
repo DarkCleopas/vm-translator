@@ -1,4 +1,4 @@
-(Point.distance)// initializa local variables
+(Point.distance)// initializate local variables
 @2
 D=A
 @R13
@@ -112,7 +112,7 @@ D=A
 @$RETURN$
 0;JMP
 ($RET1)
-(Point.teste)// initializa local variables
+(Point.teste)// initializate local variables
 @1
 D=A
 @R13

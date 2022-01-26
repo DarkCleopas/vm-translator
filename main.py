@@ -1,6 +1,8 @@
  
 from CodeWriter import CodeWriter
 from Parser import Parser
+from os import path, listdir
+import sys
 
 # with open("vm_example.vm", "r") as vm:
 #     vm_code = vm.readlines()
@@ -64,11 +66,38 @@ def translate(path, code: CodeWriter):
 
 def main():
 
-    path = "vm_example.vm"
+    try:
+        if path.isdir(sys.argv[1]):
+            files = listdir(sys.argv[1])
+            real_path = path.realpath(sys.argv[1])
+            for file in files:
+                if file.endswith('.vm'):
 
-    code = CodeWriter(path)
+                    file_path = real_path + "/" + file
 
-    translate(path, code)
+                    code = CodeWriter(file_path)
+
+                    translate(file_path, code)
+
+        elif path.isfile(sys.argv[1]):
+
+            code = CodeWriter(sys.argv[1])
+
+            translate(sys.argv[1], code)
+
+        else:
+            raise FileNotFoundError
+            
+        
+    except FileNotFoundError:
+
+        print("File not found.")
+
+    # path = "vm_example.vm"
+
+    # code = CodeWriter(path)
+
+    # translate(path, code)
 
 
 if __name__ == "__main__":

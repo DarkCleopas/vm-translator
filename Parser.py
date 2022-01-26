@@ -14,24 +14,22 @@ class Parser:
 
         with open(self.file_name) as f:
             
-            lines = map(lambda line: line.split(), f.readlines())
+            lines = map(lambda line: self.remove_comments(line).split(), f.readlines())
             
-            tokens = list(filter(lambda x: x[0][0:2] != "//", lines))
+            tokens = [line for line in lines if line != []]
 
             return tokens
     
 
-    # def remove_comments(self, line):
+    def remove_comments(self, line):
 
-    #     count = 0
+        j = 0
+        for i in range(1, len(line)):
+            if line[j] == line[i] == "/":
+                return line[:j]
+            j += 1
 
-    #     for term in line:
-
-    #         if term[0:2] == "//":
-
-    #             return line[0:count]
-            
-    #         count += 1
+        return line
 
 
     def get_command(self):
