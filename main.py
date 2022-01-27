@@ -70,16 +70,40 @@ def main():
 
     try:
         if path.isdir(sys.argv[1]):
-            files = listdir(sys.argv[1])
+            files = [file  for file in listdir(sys.argv[1]) if file.endswith('.vm')]
             real_path = path.realpath(sys.argv[1])
-            for file in files:
-                if file.endswith('.vm'):
+            print(files)
+            print(real_path)
 
-                    file_path = real_path + "/" + file
+            if len(files) > 1:
+                code = CodeWriter(real_path + "/" + real_path.split('/')[-1])
+                code.write_init()
 
-                    code = CodeWriter(file_path)
+                for file in files:
 
-                    translate(file_path, code)
+                    print("Translating ", file)
+
+                    translate(real_path + "/" + file, code)
+
+            else:
+
+                code = CodeWriter(real_path + "/" + real_path.split('/')[-1])
+
+                print("Translating ", files[0])
+
+                translate(real_path + "/" + files[0], code)
+                
+
+            
+            # for file in files:
+
+            #     if file.endswith('.vm'):
+
+            #         file_path = real_path + "/" + file
+
+            #         code = CodeWriter(file_path)
+
+            #         translate(file_path, code)
 
         elif path.isfile(sys.argv[1]):
 
