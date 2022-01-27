@@ -17,6 +17,8 @@ ARITHMETICS = ["add", "sub", "neg", "eq", "gt", "lt", "and", "or", "not"]
 
 def translate(path, code: CodeWriter):
 
+    # code.write_init()
+
     p = Parser(path)
     
     while p.has_more_commands():
